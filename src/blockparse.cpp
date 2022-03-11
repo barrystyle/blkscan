@@ -80,7 +80,7 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
             if (filepos > 80) {
                 pushblock(blockbuf, blockpos);
                 blocks++;
-                printf("\rblock %d (%d tx, %d addr)", blocks, transaction_index.size(), transaction_ledger.size());
+                printf("\rblock %d (%d addr)", blocks, transaction_ledger.size());
                 memset(blockbuf, 0, sizeof(blockbuf));
                 blockpos = 0;
             }
@@ -143,7 +143,7 @@ void blockfile_process()
         int height = height_from_coinbasescript(coinbase_script);
 
         if (current_height == height) {
-            printf("skipping orphan block height %d\n", height);
+            printf("\nskipping orphan block height %d\n", height);
             continue;
         }
 

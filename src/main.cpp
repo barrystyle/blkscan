@@ -1,6 +1,7 @@
 #include <base58.h>
 #include <crypto/sha256.h>
 #include <hash.h>
+#include <indexman.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -34,6 +35,8 @@ int main()
         fileno += 1;
         printf("\n");
     }
+
+    dump_ledger();
 
     return 1;
 }

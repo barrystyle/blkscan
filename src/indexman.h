@@ -6,11 +6,12 @@
 
 #include <map>
 
-extern std::map<std::string, CAmount> transaction_ledger;
-extern std::map<uint256, CTransaction> transaction_index;
+extern std::map<CScript, CAmount> transaction_ledger;
+extern std::map<uint256, CTransaction> transaction_index[256];
 
 void store_transaction(uint256& hash, CTransaction& tx);
 CTransaction retrieve_transaction(uint256& hash);
 void process_transaction(CTransaction&);
+void dump_ledger();
 
 #endif // INDEXMAN_H
