@@ -222,6 +222,14 @@ public:
     template <typename O> friend class Span;
 };
 
+// MakeSpan helps constructing a Span of the right type automatically.
+/** MakeSpan for arrays: */
+template <typename A, int N> Span<A> constexpr MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
+/** MakeSpan for temporaries / rvalue references, only supporting const output. */
+template <typename V> constexpr auto MakeSpan(V&& v SPAN_ATTR_LIFETIMEBOUND) -> typename std::enable_if<!std::is_lvalue_reference<V>::value, Span<const typename std::remove_pointer<decltype(v.data())>::type>>::type { return std::forward<V>(v); }
+/** MakeSpan for (lvalue) references, supporting mutable output. */
+template <typename V> constexpr auto MakeSpan(V& v SPAN_ATTR_LIFETIMEBOUND) -> Span<typename std::remove_pointer<decltype(v.data())>::type> { return v; }
+
 // Deduction guides for Span
 // For the pointer/size based and iterator based constructor:
 template <typename T, typename EndOrSize> Span(T*, EndOrSize) -> Span<T>;

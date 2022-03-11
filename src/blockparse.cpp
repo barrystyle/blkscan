@@ -157,6 +157,6 @@ void blockfile_process()
         }
 
         current_height = height;
-        printf("replaying transactions in block %d\n", height);
+        printf("\rreplaying transactions in block %d", height);
     }
 }

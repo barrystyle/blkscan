@@ -1,6 +1,6 @@
 CC=g++
-CPPFLAGS=-O3 -I. -I./src -std=c++17
-LDFLAGS=-O3 -lm -lstdc++ -lboost_filesystem
+CPPFLAGS=-O2 -I. -I./src -I./src/secp256k1/include -std=c++17
+LDFLAGS=-O2 -lm -lstdc++ -lboost_filesystem -lsecp256k1
 
 SOURCES= \
         src/arith_uint256.cpp \
@@ -30,6 +30,7 @@ SOURCES= \
         src/crypto/sha512.cpp \
         src/crypto/siphash.cpp \
         src/script/script.cpp \
+        src/script/standard.cpp \
         src/primitives/block.cpp \
         src/primitives/transaction.cpp \
         src/support/cleanse.cpp \
@@ -37,6 +38,11 @@ SOURCES= \
         src/util/strencodings.cpp \
         src/util/string.cpp \
         src/util/time.cpp \
+        src/bech32.cpp \
+        src/pubkey.cpp \
+        src/key.cpp \
+        src/key_io.cpp \
+        src/outputtype.cpp \
         src/indexman.cpp \
         src/blockparse.cpp
 

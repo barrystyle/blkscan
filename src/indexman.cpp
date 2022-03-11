@@ -1,5 +1,7 @@
+#include <key_io.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/standard.h>
 #include <streams.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -16,7 +18,7 @@ std::map<std::string, CAmount> transaction_ledger;
 std::map<uint256, CTransaction> transaction_index;
 
 void store_transaction(uint256& hash, CTransaction& tx) {
-    transaction_index.emplace(std::pair<uint256, CTransaction>(hash, tx));
+    transaction_index.insert(std::pair<uint256, CTransaction>(hash, tx));
 }
 
 CTransaction retrieve_transaction(uint256& hash) {
@@ -45,31 +47,44 @@ bool fetch_prevtx_addramt(uint256& hash, unsigned int& n, CScript& prevdest, CAm
     return true;
 }
 
-void subtract_from_address(std::string& address, CAmount& amount) {
+void address_from_hex(std::string& rawaddress, CTxDestination& address) {
+    CScript dest;
+    dest.clear();
+    dest << ToByteVector(ParseHex(rawaddress));
+    ExtractDestination(dest, address);
+}
+
+void subtract_from_address(std::string address, CScript& dest, CAmount& amount) {
     if (amount <= 0) return;
     try {
         transaction_ledger.find(address)->second -= amount;
         if (ledger_debug) {
-            printf("debited %llu from address %s\n", amount, address.c_str());
+            CTxDestination outputaddr;
+            ExtractDestination(dest, outputaddr);
+            printf("  debited %llu from address %s\n", amount, EncodeDestination(outputaddr).c_str());
         }
     } catch (...) {
         if (ledger_debug) {
-            printf("tried to subtract from address with no balance\n");
+            printf("  tried to subtract from address with no balance\n");
         }
     }
 }
 
-void credit_to_address(std::string& address, CAmount& amount) {
+void credit_to_address(std::string address, CScript& dest, CAmount& amount) {
     if (amount <= 0) return;
     try {
         transaction_ledger.find(address)->second += amount;
         if (ledger_debug) {
-            printf("credited %llu to address %s\n", amount, address.c_str());
+            CTxDestination outputaddr;
+            ExtractDestination(dest, outputaddr);
+            printf("  credited %llu to address %s\n", amount, EncodeDestination(outputaddr).c_str());
         }
     } catch (...) {
-        transaction_ledger.emplace(std::pair<std::string, CAmount>(address, amount));
+        transaction_ledger.insert(std::pair<std::string, CAmount>(address, amount));
         if (ledger_debug) {
-            printf("credited %llu to new address %s\n", amount, address.c_str());
+            CTxDestination outputaddr;
+            ExtractDestination(dest, outputaddr);
+            printf("  credited %llu to new address %s\n", amount, EncodeDestination(outputaddr).c_str());
         }
     }
 }
@@ -88,7 +103,8 @@ void process_transaction(CTransaction& tx_ref) {
             continue;
         }
         std::string address = HexStr(prevdest);
-        subtract_from_address(address, prevamount);
+        if (prevamount <= 0) continue;
+        subtract_from_address(address, prevdest, prevamount);
     }
 
     for (unsigned int i=0; i<tx_ref.vout.size(); i++) {
@@ -96,6 +112,8 @@ void process_transaction(CTransaction& tx_ref) {
         CScript dest = txout.scriptPubKey;
         CAmount amount = txout.nValue;
         std::string address = HexStr(dest);
-        credit_to_address(address, amount);
+        if (amount <= 0) continue;
+        credit_to_address(address, dest, amount);
     }
 }
+

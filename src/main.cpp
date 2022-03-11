@@ -12,6 +12,8 @@
 
 #include <blockparse.h>
 
+#include <secp256k1/include/secp256k1.h>
+
 #include <iostream>
 #include <vector>
 
