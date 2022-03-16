@@ -62,6 +62,13 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
         return false;
     }
 
+    //! read the thing into memory
+    char* memfile = (char*)malloc(167772160);
+    memset(memfile, 0, sizeof(167772160));
+    fseek(blkfile, 0, SEEK_SET);
+    fread(memfile, filesizein, 1, blkfile);
+    fclose(blkfile);
+
     //! counters
     int blocks = 0;
 
@@ -70,13 +77,11 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
     memset(blockbuf, 0, sizeof(blockbuf));
 
     //! scan for starting bytes
-    char buf[8];
+    char *memptr;
     int filepos = 0, blockpos = 0;
-    while (filepos < filesizein - sizeof(blk_magic)) {
-        fseek(blkfile, filepos, SEEK_SET);
-        memset(buf, 0, sizeof(buf));
-        fread(&buf[0], sizeof(blk_magic), 1, blkfile);
-        if (isblockmagic(buf)) {
+    while (filepos < filesizein - 4) {
+        memptr = &memfile[filepos];
+        if (isblockmagic(memptr)) {
             if (filepos > 80) {
                 pushblock(blockbuf, blockpos);
                 blocks++;
@@ -86,11 +91,13 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
             }
             filepos += 4;
         } else {
-            blockbuf[blockpos] = buf[0];
+            blockbuf[blockpos] = memptr[0];
             filepos += 1;
             blockpos += 1;
         }
     }
+
+    free(memfile);
 
     return true;
 }
