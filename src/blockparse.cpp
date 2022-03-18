@@ -85,7 +85,7 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
             if (filepos > 80) {
                 pushblock(blockbuf, blockpos);
                 blocks++;
-                printf("\rblock %d (%d addr)", blocks, transaction_ledger.size());
+                printf("\rblock %d", blocks);
                 memset(blockbuf, 0, sizeof(blockbuf));
                 blockpos = 0;
             }

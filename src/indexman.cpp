@@ -14,21 +14,25 @@
 //! barrystyle 04032022
 
 bool ledger_debug = false;
-std::map<CScript, CAmount> transaction_ledger;
+std::map<CScript, CAmount> transaction_ledger[256];
 std::map<uint256, CTransaction> transaction_index[256];
 
-inline void which_map(uint256& hash, unsigned int& map_num) {
+inline void which_map(uint256& hash, uint8_t& map_num) {
     map_num = *(uint8_t*)&hash;
 }
 
+inline void which_map(CScript& scr, uint8_t& map_num) {
+    map_num = *(uint8_t*)&scr[0];
+}
+
 void store_transaction(uint256& hash, CTransaction& tx) {
-    unsigned int b;
+    uint8_t b;
     which_map(hash, b);
     transaction_index[b].insert(std::pair<uint256, CTransaction>(hash, tx));
 }
 
 CTransaction* retrieve_transaction(uint256& hash) {
-    unsigned int b;
+    uint8_t b;
     which_map(hash, b);
     std::map<uint256, CTransaction>::iterator it = transaction_index[b].begin();
     while (it != transaction_index[b].end()) {
@@ -52,8 +56,10 @@ bool fetch_prevtx_addramt(uint256& hash, unsigned int& n, CScript& prevdest, CAm
 }
 
 void subtract_from_address(CScript& dest, CAmount& amount) {
-    std::map<CScript, CAmount>::iterator it = transaction_ledger.begin();
-    while (it != transaction_ledger.end()) {
+    uint8_t b;
+    which_map(dest, b);
+    std::map<CScript, CAmount>::iterator it = transaction_ledger[b].begin();
+    while (it != transaction_ledger[b].end()) {
        CScript search_addr = it->first;
        if (search_addr == dest) {
            if (ledger_debug) {
@@ -72,8 +78,10 @@ void subtract_from_address(CScript& dest, CAmount& amount) {
 }
 
 void credit_to_address(CScript& dest, CAmount& amount) {
-    std::map<CScript, CAmount>::iterator it = transaction_ledger.begin();
-    while (it != transaction_ledger.end()) {
+    uint8_t b;
+    which_map(dest, b);
+    std::map<CScript, CAmount>::iterator it = transaction_ledger[b].begin();
+    while (it != transaction_ledger[b].end()) {
        CScript search_addr = it->first;
        if (search_addr == dest) {
            if (ledger_debug) {
@@ -91,7 +99,7 @@ void credit_to_address(CScript& dest, CAmount& amount) {
         ExtractDestination(dest, outputaddr);
         printf("  credited %llu to new address %s\n", amount, EncodeDestination(outputaddr).c_str());
     }
-    transaction_ledger.insert(std::pair<CScript, CAmount>(dest, amount));
+    transaction_ledger[b].insert(std::pair<CScript, CAmount>(dest, amount));
 }
 
 void process_transaction(CTransaction& tx_ref) {
@@ -123,9 +131,11 @@ void process_transaction(CTransaction& tx_ref) {
 }
 
 void dump_ledger() {
-    for (const auto &l : transaction_ledger) {
-        CTxDestination outputaddr;
-        ExtractDestination(l.first, outputaddr);
-        printf("%s, %.8f\n", EncodeDestination(outputaddr).c_str(), (double) l.second / COIN);
+    for (unsigned int b=0; b<256; b++) {
+        for (const auto &l : transaction_ledger[b]) {
+            CTxDestination outputaddr;
+            ExtractDestination(l.first, outputaddr);
+            printf("%s, %.8f\n", EncodeDestination(outputaddr).c_str(), (double) l.second / COIN);
+        }
     }
 }

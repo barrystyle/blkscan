@@ -6,7 +6,7 @@
 
 #include <map>
 
-extern std::map<CScript, CAmount> transaction_ledger;
+extern std::map<CScript, CAmount> transaction_ledger[256];
 extern std::map<uint256, CTransaction> transaction_index[256];
 
 void store_transaction(uint256& hash, CTransaction& tx);
