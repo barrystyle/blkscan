@@ -85,7 +85,7 @@ bool blockfile_scanmagic(char* filepathin, int filesizein)
             if (filepos > 80) {
                 pushblock(blockbuf, blockpos);
                 blocks++;
-                printf("\rblock %d", blocks);
+                printf("\rparsing block %d", blocks);
                 memset(blockbuf, 0, sizeof(blockbuf));
                 blockpos = 0;
             }
@@ -142,7 +142,6 @@ void blockfile_process()
         std::shared_ptr<CBlock> blockptr = std::make_shared<CBlock>();
         CBlock& block = *blockptr;
         if (!DecodeHexBlk(block, l)) {
-            printf("error decoding block\n");
             continue;
         }
 
@@ -150,7 +149,6 @@ void blockfile_process()
         int height = height_from_coinbasescript(coinbase_script);
 
         if (current_height == height) {
-            printf("\nskipping orphan block height %d\n", height);
             continue;
         }
 
