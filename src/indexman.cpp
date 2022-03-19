@@ -14,28 +14,30 @@
 //! barrystyle 04032022
 
 bool ledger_debug = false;
-std::map<CScript, CAmount> transaction_ledger[256];
-std::map<uint256, CTransaction> transaction_index[256];
+std::map<CScript, CAmount> transaction_ledger[256][256];
+std::map<uint256, CTransaction> transaction_index[256][256];
 
-inline void which_map(uint256& hash, uint8_t& map_num) {
+inline void which_map(uint256& hash, uint8_t& map_num, uint8_t& map_num2) {
     map_num = *(uint8_t*)&hash;
+    map_num2 = *(uint8_t*)&hash+1;
 }
 
-inline void which_map(CScript& scr, uint8_t& map_num) {
+inline void which_map(CScript& scr, uint8_t& map_num, uint8_t& map_num2) {
     map_num = *(uint8_t*)&scr[0];
+    map_num2 = *(uint8_t*)&scr[1];
 }
 
 void store_transaction(uint256& hash, CTransaction& tx) {
-    uint8_t b;
-    which_map(hash, b);
-    transaction_index[b].insert(std::pair<uint256, CTransaction>(hash, tx));
+    uint8_t b, c;
+    which_map(hash, b, c);
+    transaction_index[b][c].insert(std::pair<uint256, CTransaction>(hash, tx));
 }
 
 CTransaction* retrieve_transaction(uint256& hash) {
-    uint8_t b;
-    which_map(hash, b);
-    std::map<uint256, CTransaction>::iterator it = transaction_index[b].begin();
-    while (it != transaction_index[b].end()) {
+    uint8_t b, c;
+    which_map(hash, b, c);
+    std::map<uint256, CTransaction>::iterator it = transaction_index[b][c].begin();
+    while (it != transaction_index[b][c].end()) {
         uint256 search_hash = it->first;
         if (search_hash == hash) {
             return &it->second;
@@ -56,10 +58,10 @@ bool fetch_prevtx_addramt(uint256& hash, unsigned int& n, CScript& prevdest, CAm
 }
 
 void subtract_from_address(CScript& dest, CAmount& amount) {
-    uint8_t b;
-    which_map(dest, b);
-    std::map<CScript, CAmount>::iterator it = transaction_ledger[b].begin();
-    while (it != transaction_ledger[b].end()) {
+    uint8_t b, c;
+    which_map(dest, b, c);
+    std::map<CScript, CAmount>::iterator it = transaction_ledger[b][c].begin();
+    while (it != transaction_ledger[b][c].end()) {
        CScript search_addr = it->first;
        if (search_addr == dest) {
            if (ledger_debug) {
@@ -78,10 +80,10 @@ void subtract_from_address(CScript& dest, CAmount& amount) {
 }
 
 void credit_to_address(CScript& dest, CAmount& amount) {
-    uint8_t b;
-    which_map(dest, b);
-    std::map<CScript, CAmount>::iterator it = transaction_ledger[b].begin();
-    while (it != transaction_ledger[b].end()) {
+    uint8_t b, c;
+    which_map(dest, b, c);
+    std::map<CScript, CAmount>::iterator it = transaction_ledger[b][c].begin();
+    while (it != transaction_ledger[b][c].end()) {
        CScript search_addr = it->first;
        if (search_addr == dest) {
            if (ledger_debug) {
@@ -99,7 +101,7 @@ void credit_to_address(CScript& dest, CAmount& amount) {
         ExtractDestination(dest, outputaddr);
         printf("  credited %llu to new address %s\n", amount, EncodeDestination(outputaddr).c_str());
     }
-    transaction_ledger[b].insert(std::pair<CScript, CAmount>(dest, amount));
+    transaction_ledger[b][c].insert(std::pair<CScript, CAmount>(dest, amount));
 }
 
 void process_transaction(CTransaction& tx_ref) {
@@ -132,10 +134,12 @@ void process_transaction(CTransaction& tx_ref) {
 
 void dump_ledger() {
     for (unsigned int b=0; b<256; b++) {
-        for (const auto &l : transaction_ledger[b]) {
+      for (unsigned int c=0; c<256; c++) {
+        for (const auto &l : transaction_ledger[b][c]) {
             CTxDestination outputaddr;
             ExtractDestination(l.first, outputaddr);
             printf("%s, %.8f\n", EncodeDestination(outputaddr).c_str(), (double) l.second / COIN);
         }
+      }
     }
 }
