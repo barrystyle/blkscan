@@ -5,6 +5,6 @@ bool isblockmagic(char* bytes);
 void printblock(char* bytes, unsigned int len);
 int blockfile_exists(char* path, int filenum, char* filepathout);
 bool blockfile_scanmagic(char* filepathin, int filesizein);
-void blockfile_process();
+void blockfile_process(bool& halt, int stop_height);
 
 #endif // BLOCKPARSE_H

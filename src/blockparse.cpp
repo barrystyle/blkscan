@@ -133,7 +133,7 @@ int height_from_coinbasescript(std::string& coinbase_script)
     return stoi(height_flip, 0, 16);
 }
 
-void blockfile_process()
+void blockfile_process(bool& halt, int stop_height)
 {
     printf("\n");
 
@@ -163,5 +163,11 @@ void blockfile_process()
 
         current_height = height;
         printf("\rreplaying transactions in block %d", height);
+
+        if (height >= stop_height) {
+            halt = true;
+            dump_ledger();
+            return;
+        }
     }
 }

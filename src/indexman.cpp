@@ -133,12 +133,16 @@ void process_transaction(CTransaction& tx_ref) {
 }
 
 void dump_ledger() {
+    printf("\n");
     for (unsigned int b=0; b<256; b++) {
       for (unsigned int c=0; c<256; c++) {
         for (const auto &l : transaction_ledger[b][c]) {
             CTxDestination outputaddr;
-            ExtractDestination(l.first, outputaddr);
-            printf("%s, %.8f\n", EncodeDestination(outputaddr).c_str(), (double) l.second / COIN);
+            if (ExtractDestination(l.first, outputaddr)) {
+                if (l.second) {
+                    printf("%s, %.8f\n", EncodeDestination(outputaddr).c_str(), (double) l.second / COIN);
+                }
+            }
         }
       }
     }

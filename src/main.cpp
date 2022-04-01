@@ -27,16 +27,23 @@ int main()
     char *fpathout = (char*)malloc(1024);
     int fsizeout = 0;
 
+    //! stop at given height
+    bool halt = false;
+    int stop_height = 100000;
+
+    printf("\nstopping after height %d\n", stop_height);
+
     while (fsizeout = blockfile_exists(path, fileno, fpathout)) {
         printf("%s %d %s %d\n", path, fileno, fpathout, fsizeout);
         blockfile_scanmagic(fpathout, fsizeout);
-        blockfile_process();
+        blockfile_process(halt, stop_height);
+        if (halt) {
+            return 1;
+        }
         blocks.clear();
         fileno += 1;
         printf("\n");
     }
-
-    dump_ledger();
 
     return 1;
 }
