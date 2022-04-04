@@ -23,8 +23,8 @@ inline void which_map(uint256& hash, uint8_t& map_num, uint8_t& map_num2) {
 }
 
 inline void which_map(CScript& scr, uint8_t& map_num, uint8_t& map_num2) {
-    map_num = *(uint8_t*)&scr[0];
-    map_num2 = *(uint8_t*)&scr[1];
+    map_num = *(uint8_t*)&scr[3];
+    map_num2 = *(uint8_t*)&scr[4];
 }
 
 void store_transaction(uint256& hash, CTransaction& tx) {
